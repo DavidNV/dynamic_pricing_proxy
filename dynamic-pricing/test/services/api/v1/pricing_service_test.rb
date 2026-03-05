@@ -99,4 +99,15 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
       assert_includes service.errors.join, "timed out"
     end
   end
+
+  test "is invalid when upstream connection is refused" do
+    connection_refused_error = Errno::ECONNREFUSED.new("Connection refused - connect(2)")
+    RateApiClient.stub(:get_rate, ->(*) { raise connection_refused_error }) do
+      service = build_service
+      service.run
+
+      refute service.valid?
+      assert_includes service.errors.join, "unavailable"
+    end
+  end
 end

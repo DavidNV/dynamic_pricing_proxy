@@ -6,6 +6,7 @@ class RateApiClient
 
   class RateApiError < StandardError; end
   class TimeoutError < RateApiError; end
+  class ConnectionError < Error; end
 
   def self.get_rate(period:, hotel:, room:)
     params = {
@@ -20,5 +21,7 @@ class RateApiClient
     self.post("/pricing", body: params)
   rescue Net::ReadTimeout, Net::OpenTimeout
     raise TimeoutError, "The upstream pricing service timed out"
+  rescue Errno::ECONNREFUSED, SocketError
+    raise ConnectionError, "The upstream pricing service is unavailable"
   end
 end

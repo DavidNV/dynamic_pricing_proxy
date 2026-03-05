@@ -26,6 +26,8 @@ module Api::V1
       end
     rescue RateApiClient::TimeoutError
       errors << "The upstream pricing service timed out, please try again later"
+    rescue Errno::ECONNREFUSED, SocketError
+      raise ConnectionError, "The upstream pricing service is unavailable"
     end
   end
 end
