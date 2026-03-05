@@ -8,9 +8,13 @@ module Api::V1
 
     def run
       rate = RateApiClient.get_rate(period: @period, hotel: @hotel, room: @room)
-
       if rate.success?
-        parsed_rate = JSON.parse(rate.body)
+        begin
+          parsed_rate = JSON.parse(rate.body)
+        rescue JSON::ParserError
+          errors << "Received an invalid response from the upstream service"
+          return
+        end
         unless parsed_rate['rates'].is_a?(Array)
           errors << "unexpected response from upstream service"
           return

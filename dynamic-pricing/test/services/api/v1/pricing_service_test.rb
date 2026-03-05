@@ -76,4 +76,16 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
       assert_includes service.errors.join, "unexpected response"
     end
   end
+
+  test "is invalid when upstream returns malformed JSON" do
+    malformed_response = OpenStruct.new(success?: true, body: "something_awful_happened{{")
+
+    RateApiClient.stub(:get_rate, malformed_response) do
+      service = build_service
+      service.run
+
+      refute service.valid?
+      assert_includes service.errors.join, "invalid response"
+    end
+  end
 end
