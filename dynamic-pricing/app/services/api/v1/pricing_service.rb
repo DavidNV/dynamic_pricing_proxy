@@ -1,13 +1,12 @@
 module Api::V1
   class PricingService < BaseService
-    def initialize(period:, hotel:, room:)
-      @period = period
-      @hotel = hotel
-      @room = room
+    def initialize(attributes:, result_extractor:)
+      @attributes       = attributes
+      @result_extractor = result_extractor
     end
 
     def run
-      response = RateApiClient.get_rates(period: @period, hotel: @hotel, room: @room)
+      response = RateApiClient.get_rates(@attributes)
       process_response(response)
     rescue RateApiClient::TimeoutError
       errors << "The upstream pricing service timed out, please try again later"
@@ -26,16 +25,8 @@ module Api::V1
         return
       end
 
-      @result = find_rate(parsed)
-      errors << "Rate not found for the requested period, hotel and room" unless @result
-    end
-
-    def find_rate(parsed)
-      Array(parsed['rates']).detect do |rate|
-        rate['period'] == @period &&
-        rate['hotel']  == @hotel  &&
-        rate['room']   == @room
-      end
+      @result = @result_extractor.call(Array(parsed['rates']))
+      errors << "Rate not found for the requested period, hotel and room" unless @result&.present?
     end
 
     def parse_body(body)
