@@ -5,6 +5,10 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
   VALID_HOTEL  = "FloatingPointResort"
   VALID_ROOM   = "SingletonRoom"
 
+  setup do
+    REDIS.del("upstream:call_count")
+  end
+
   def build_service
     extractor = SingleRateExtractor.new(period: VALID_PERIOD, hotel: VALID_HOTEL, room: VALID_ROOM)
     Api::V1::PricingService.new(
@@ -149,12 +153,11 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
   end
 
   test "is invalid when daily quota is exhausted" do
-    RateCache.stub(:quota_exceeded?, true) do
-      service = build_service
-      service.run
+    1000.times { RateCache.increment_quota_counter }
+    service = build_service
+    service.run
 
-      refute service.valid?
-      assert_includes service.errors.join, "Pricing is temporarily unavailable"
-    end
+    refute service.valid?
+    assert_includes service.errors.join, "Pricing is temporarily unavailable"
   end
 end
