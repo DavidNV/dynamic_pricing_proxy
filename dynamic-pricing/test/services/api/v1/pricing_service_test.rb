@@ -147,4 +147,14 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
       assert_includes service.errors.join, "unavailable"
     end
   end
+
+  test "is invalid when daily quota is exhausted" do
+    RateCache.stub(:quota_exceeded?, true) do
+      service = build_service
+      service.run
+
+      refute service.valid?
+      assert_includes service.errors.join, "Pricing is temporarily unavailable"
+    end
+  end
 end
