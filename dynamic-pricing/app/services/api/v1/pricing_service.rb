@@ -18,36 +18,31 @@ module Api::V1
     private
 
     def process_response(response)
-      unless response.success?
-        errors << JSON.parse(response.body)['error']
-        return
-      end
-
       parsed = parse_body(response.body)
       return unless parsed
+
+      unless response.success?
+        errors << parsed['error']
+        return
+      end
 
       @result = find_rate(parsed)
       errors << "Rate not found for the requested period, hotel and room" unless @result
     end
 
-    def parse_body(body)
-      parsed = JSON.parse(body)
-      unless parsed['rates'].is_a?(Array)
-        errors << "unexpected response from upstream service"
-        return nil
+    def find_rate(parsed)
+      Array(parsed['rates']).detect do |rate|
+        rate['period'] == @period &&
+        rate['hotel']  == @hotel  &&
+        rate['room']   == @room
       end
-      parsed
+    end
+
+    def parse_body(body)
+      JSON.parse(body)
     rescue JSON::ParserError
       errors << "Received an invalid response from the upstream service"
       nil
-    end
-
-    def find_rate(parsed)
-      parsed['rates'].detect do |rate|
-        rate['period'] == @period &&
-        rate['hotel'] == @hotel &&
-        rate['room'] == @room
-      end
     end
   end
 end
