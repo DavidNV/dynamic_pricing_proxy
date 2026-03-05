@@ -8,7 +8,7 @@ class RateApiClient
   class TimeoutError < RateApiError; end
   class ConnectionError < RateApiError; end
 
-  def self.get_rate(period:, hotel:, room:)
+  def self.get_rates(period:, hotel:, room:)
     params = {
       attributes: [
         {

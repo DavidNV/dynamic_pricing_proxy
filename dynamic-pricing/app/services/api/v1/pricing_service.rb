@@ -7,7 +7,7 @@ module Api::V1
     end
 
     def run
-      response = RateApiClient.get_rate(period: @period, hotel: @hotel, room: @room)
+      response = RateApiClient.get_rates(period: @period, hotel: @hotel, room: @room)
       process_response(response)
     rescue RateApiClient::TimeoutError
       errors << "The upstream pricing service timed out, please try again later"

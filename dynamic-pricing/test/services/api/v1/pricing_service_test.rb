@@ -24,7 +24,7 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
   end
 
   test "returns full rate object on success" do
-    RateApiClient.stub(:get_rate, successful_upstream_response) do
+    RateApiClient.stub(:get_rates, successful_upstream_response) do
       service = build_service
       service.run
 
@@ -42,7 +42,7 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
     body = { "error" => "Some failure occurred" }.to_json
     failed_response = OpenStruct.new(success?: false, body:)
 
-    RateApiClient.stub(:get_rate, failed_response) do
+    RateApiClient.stub(:get_rates, failed_response) do
       service = build_service
       service.run
 
@@ -55,7 +55,7 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
     body = { "rates" => [] }.to_json
     empty_response = OpenStruct.new(success?: true, body:)
 
-    RateApiClient.stub(:get_rate, empty_response) do
+    RateApiClient.stub(:get_rates, empty_response) do
       service = build_service
       service.run
 
@@ -68,7 +68,7 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
     body = {}.to_json
     bad_response = OpenStruct.new(success?: true, body:)
 
-    RateApiClient.stub(:get_rate, bad_response) do
+    RateApiClient.stub(:get_rates, bad_response) do
       service = build_service
       service.run
 
@@ -80,7 +80,7 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
   test "is invalid when upstream returns malformed JSON" do
     malformed_response = OpenStruct.new(success?: true, body: "something_awful_happened{{")
 
-    RateApiClient.stub(:get_rate, malformed_response) do
+    RateApiClient.stub(:get_rates, malformed_response) do
       service = build_service
       service.run
 
@@ -93,7 +93,7 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
     timeout_error =
       RateApiClient::TimeoutError.new("The upstream pricing service timed out")
 
-    RateApiClient.stub(:get_rate, ->(*) { raise timeout_error }) do
+    RateApiClient.stub(:get_rates, ->(*) { raise timeout_error }) do
       service = build_service
       service.run
 
@@ -106,7 +106,7 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
     connection_refused_error =
       RateApiClient::ConnectionError.new("The upstream pricing service is unavailable")
 
-    RateApiClient.stub(:get_rate, ->(*) { raise connection_refused_error }) do
+    RateApiClient.stub(:get_rates, ->(*) { raise connection_refused_error }) do
       service = build_service
       service.run
 
