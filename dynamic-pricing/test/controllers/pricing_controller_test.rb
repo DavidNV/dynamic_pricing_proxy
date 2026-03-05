@@ -145,4 +145,48 @@ class Api::V1::PricingControllerTest < ActionDispatch::IntegrationTest
     json_response = JSON.parse(@response.body)
     assert_includes json_response["error"], "Invalid room"
   end
+
+  # POST /api/v1/pricing — batch
+  test "returns all rates for a valid batch request" do
+    body = {
+      "rates" => [
+        { "period" => "Summer", "hotel" => "FloatingPointResort", "room" => "SingletonRoom", "rate" => "15000" },
+        { "period" => "Winter", "hotel" => "FloatingPointResort", "room" => "BooleanTwin",   "rate" => "28000" }
+      ]
+    }.to_json
+    RateApiClient.stub(:get_rates, OpenStruct.new(success?: true, body:)) do
+      post api_v1_pricing_url, params: {
+        attributes: [
+          { period: "Summer", hotel: "FloatingPointResort", room: "SingletonRoom" },
+          { period: "Winter", hotel: "FloatingPointResort", room: "BooleanTwin" }
+        ]
+      }, as: :json
+
+      assert_response :success
+      json_response = JSON.parse(@response.body)
+      assert_equal 2,       json_response["rates"].length
+      assert_equal "15000", json_response["rates"][0]["rate"]
+      assert_equal "28000", json_response["rates"][1]["rate"]
+    end
+  end
+
+  test "returns 400 for batch request without attributes" do
+    post api_v1_pricing_url, params: {}, as: :json
+
+    assert_response :bad_request
+    json_response = JSON.parse(@response.body)
+    assert_includes json_response["error"], "Missing required parameter: attributes"
+  end
+
+  test "returns 400 for batch request with invalid period" do
+    post api_v1_pricing_url, params: {
+      attributes: [
+        { period: "InvalidPeriod", hotel: "FloatingPointResort", room: "SingletonRoom" }
+      ]
+    }, as: :json
+
+    assert_response :bad_request
+    json_response = JSON.parse(@response.body)
+    assert_includes json_response["error"], "Invalid period"
+  end
 end
