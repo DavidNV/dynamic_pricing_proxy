@@ -5,8 +5,12 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
   VALID_HOTEL  = "FloatingPointResort"
   VALID_ROOM   = "SingletonRoom"
 
-  def build_service(period: VALID_PERIOD, hotel: VALID_HOTEL, room: VALID_ROOM)
-    Api::V1::PricingService.new(period:, hotel:, room:)
+  def build_service
+    extractor = SingleRateExtractor.new(period: VALID_PERIOD, hotel: VALID_HOTEL, room: VALID_ROOM)
+    Api::V1::PricingService.new(
+      attributes: [{ period: VALID_PERIOD, hotel: VALID_HOTEL, room: VALID_ROOM }],
+      result_extractor: extractor
+    )
   end
 
   def successful_upstream_response(rate: "15000")
@@ -35,6 +39,35 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
       assert_equal VALID_HOTEL,  service.result["hotel"]
       assert_equal VALID_ROOM,   service.result["room"]
       assert_equal "15000",      service.result["rate"]
+    end
+  end
+
+  test "returns all rates for a batch request" do
+    body = {
+      "rates" => [
+        { "period" => "Summer", "hotel" => "FloatingPointResort", "room" => "SingletonRoom", "rate" => "15000" },
+        { "period" => "Winter", "hotel" => "FloatingPointResort", "room" => "BooleanTwin",   "rate" => "28000" }
+      ]
+    }.to_json
+    batch_response = OpenStruct.new(success?: true, body:)
+
+    attributes = [
+      { period: "Summer", hotel: "FloatingPointResort", room: "SingletonRoom" },
+      { period: "Winter", hotel: "FloatingPointResort", room: "BooleanTwin" }
+    ]
+
+    RateApiClient.stub(:get_rates, batch_response) do
+      service = Api::V1::PricingService.new(
+        attributes: attributes,
+        result_extractor: BatchRateExtractor.new
+      )
+      service.run
+
+      assert service.valid?
+      assert_empty service.errors
+      assert_equal 2,        service.result.length
+      assert_equal "15000",  service.result[0]["rate"]
+      assert_equal "28000",  service.result[1]["rate"]
     end
   end
 
