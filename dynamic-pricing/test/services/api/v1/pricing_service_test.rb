@@ -88,4 +88,14 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
       assert_includes service.errors.join, "invalid response"
     end
   end
+
+  test "is invalid when upstream times out" do
+    RateApiClient.stub(:get_rate, ->(*) { raise Net::ReadTimeout }) do
+      service = build_service
+      service.run
+
+      refute service.valid?
+      assert_includes service.errors.join, "timed out"
+    end
+  end
 end
