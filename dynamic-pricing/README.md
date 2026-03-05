@@ -2,81 +2,54 @@
    <img src="/img/logo.svg?raw=true" width=600 style="background-color:white;">
 </div>
 
-# Backend Engineering Take-Home Assignment: Dynamic Pricing Proxy
+# Dynamic Pricing Proxy Service
 
-Welcome to the Tripla backend engineering take-home assignment\! 🧑‍💻 This exercise is designed to simulate a real-world problem you might encounter as part of our team.
+A Ruby on Rails service acting as a rate-limit aware proxy between consumers and a costly upstream hotel room pricing API.
 
-⚠️ **Before you begin**, please review the main [FAQ](/README.md#frequently-asked-questions). It contains important information, **including our specific guidelines on how to submit your solution.**
+## Constrains
 
-## The Challenge
+Besides the inherit cost the princig API has, we also have the following constraints/limitations.
 
-At Tripla, we use a dynamic pricing model for hotel rooms. Instead of static, unchanging rates, our model uses a real-time algorithm to adjust prices based on market demand and other data signals. This helps us maximize both revenue and occupancy.
+| Constrain| Value |
+| -------- | -------- |
+| Upstream API Limit   | 1,000 request/day  |
+| Required consumer throughput  | 10,000 request/day  |
+| Rate validiy window | 5 minutes |
 
-Our Data and AI team built a powerful model to handle this, but its inference process is computationally expensive to run. To make this product more cost-effective, we analyzed the model's output and found that a calculated room rate remains effective for up to 5 minutes.
+## Assumptions
 
-This insight presents a great optimization opportunity, and that's where you come in.
+1. TBA
 
-## Your Mission
+## Implementation considerations
 
-Your mission is to build an efficient service that acts as an intermediary to our dynamic pricing model. This service will be responsible for providing rates to our users while respecting the operational constraints of the expensive model behind it.
+The approach I will follow is usign Redis to cache the rates since Redis is native-TTL, seems pretty logic to go this route instead of using Rails.cache. I will consider also the quota for a 24 hours window.
 
-You will start with a Ruby on Rails application that is already integrated with our dynamic pricing model. However, the current implementation fetches a new rate for every single request. Your mission is to ensure this service handles the pricing models' constraints.
+### Cache Key Design
+Each cached entry is keyed (Format TBD). TTL is set to 300 seconds (5 minutes) on write.
+The service never serves a stale entry so if the TTL has expired, Redis will have evicted it and a fresh upstream fetch is triggered.
 
-## Core Requirements
+### Quota Awareness
+The service tracks upstream call count in Redis with a 24-hour rolling TTL.
 
-1. Review the pricing model's API and its constraints. The model's docker image and documentation are hosted on dockerhub:  [tripladev/rate-api](https://hub.docker.com/r/tripladev/rate-api).
+## Pending work
 
-2. Ensure rate validity. A rate fetched from the pricing model is considered valid for 5 minutes. Your service must ensure that any rate it provides for a given set of parameters (`period`, `hotel`, `room`) is no older than this 5-minute window.
+TBA
 
-3. Honor throughput requirements. Your solution must be able to handle at least 10,000 requests per day from our users while using a single API token.
+## Development plan
 
-## How We'll Evaluate Your Work
+- [x] Init project repository.
+- [x] First README with update with constrains, assumptions, and implementation sections.
+- [ ] Research on how to scale Redis with Puma.
+- [ ] PricingService Tests: support current scenario (Non-batched requests)(Red run).
+- [ ] PricingService Tests: Add test for batched requests (Red run).
+- [ ] PricingService: Add implementation for Batched requests (Green run and Refactor).
+- [ ] Princing Endpoint Tests: add test for batched requests (Red run).
+- [ ] Princing Endpoint: add implementation for batched requests (Green run and refactor).
+- [ ] Environment: Add Redis to development env.
+- [ ] RateCacheService (TBC) Tests: add test for caching behaviour.
+- [ ] RateCacheService (TBC): implement caching behaviour for upstream quota and rates.
+- [ ] PricingService Tests: Add test scenarios for cached requests.
+- [ ] Princing Endpoint Tests: TBC: Perhaps mocks will be necessary but I consider the integration tests in PricingService would be enough
 
-This isn't just about getting the right answer. We're excited to see how you approach the problem. Treat this as you would a production-ready feature.
-
-  * We'll be looking for clean, well-structured, and testable code. Feel free to add dependencies or refactor the existing scaffold as you see fit.
-  * How do you decide on your approach to meeting the performance and cost requirements? Documenting your thought process is a great way to share this.
-  * A reliable service anticipates failure. How does your service behave if the pricing model is slow, or returns an error? Providing descriptive error messages to the end-user is a key part of a robust API.
-  * We want to see how you work around constraints and navigate an existing codebase to deliver a solution.
-
-
-## Minimum Deliverables
-
-1.  A link to your Git repository containing the complete solution.
-2.  Clear instructions in the `README.md` on how to build, test, and run your service.
-
-We highly value seeing your thought process. A great submission will also include documentation (e.g., in the `README.md`) discussing the design choices you made. Consider outlining different approaches you considered, their potential tradeoffs, and a clear rationale for why you chose your final solution.
-
-## Development Environment Setup
-
-The project scaffold is a minimal Ruby on Rails application with a `/api/v1/pricing` endpoint. While you're free to configure your environment as you wish, this repository is pre-configured for a Docker-based workflow that supports live reloading for your convenience.
-
-The provided `Dockerfile` builds a container with all necessary dependencies. Your local code is mounted directly into the container, so any changes you make on your machine will be reflected immediately. Your application will need to communicate with the external pricing model, which also runs in its own Docker container.
-
-### Quick Start Guide
-
-Here is a list of common commands for building, running, and interacting with the Dockerized environment.
-
-```bash
-
-# --- 1. Build & Run The Main Application ---
-# Build and run the Docker compose
-docker compose up -d --build
-
-# --- 2. Test The Endpoint ---
-# Send a sample request to your running service
-curl 'http://localhost:3000/api/v1/pricing?period=Summer&hotel=FloatingPointResort&room=SingletonRoom'
-
-# --- 3. Run Tests ---
-# Run the full test suite
-docker compose exec interview-dev ./bin/rails test
-
-# Run a specific test file
-docker compose exec interview-dev ./bin/rails test test/controllers/pricing_controller_test.rb
-
-# Run a specific test by name
-docker compose exec interview-dev ./bin/rails test test/controllers/pricing_controller_test.rb -n test_should_get_pricing_with_all_parameters
-```
-
-
-Good luck, and we look forward to seeing what you build\!
+## How to run
+TBA
