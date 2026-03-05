@@ -96,4 +96,25 @@ class Api::V1::PricingController < ApplicationController
       end
     end
   end
+
+  def validate_attribute(attr, index: nil)
+    prefix = index ? "at index #{index} " : ""
+
+    unless VALID_PERIODS.include?(attr[:period])
+      render json: { error: "Invalid period #{prefix}. Must be one of: #{VALID_PERIODS.join(', ')}" }, status: :bad_request
+      return false
+    end
+
+    unless VALID_HOTELS.include?(attr[:hotel])
+      render json: { error: "Invalid hotel #{prefix}. Must be one of: #{VALID_HOTELS.join(', ')}" }, status: :bad_request
+      return false
+    end
+
+    unless VALID_ROOMS.include?(attr[:room])
+      render json: { error: "Invalid room #{prefix}. Must be one of: #{VALID_ROOMS.join(', ')}" }, status: :bad_request
+      return false
+    end
+
+    true
+  end
 end
