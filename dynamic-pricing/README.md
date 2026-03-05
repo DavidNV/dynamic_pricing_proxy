@@ -47,12 +47,13 @@ TBA
 - [x] PricingService: implement error handling (Green + Refactor)
 
 ### RateApiClient — Catch support
-- [ ] RateApiClient: extend get_rate to support multiple rooms (get_rates)
-- [ ] PricingService tests: internal batching via get_rates (Red)
-- [ ] PricingService: implement internal batching (Green + Refactor)
+- [x] RateApiClient: get_rates supporting single and batch
+- [x] PricingService tests: internal batching via get_rates
+- [x] PricingService: implement internal batching (Green + Refactor)
+- [x] Extractors: SingleRateExtractor + BatchRateExtractor tested and implemented
 
 ### Caching
-- [ ] Environment: add Redis to docker-compose and Gemfile
+- [x] Environment: add Redis to docker-compose and Gemfile
 - [ ] Research: Redis + Puma threading model
 - [ ] RateCache (TBC) tests: write, fetch, TTL, quota counter (Red)
 - [ ] RateCache (TBC): implement (Green + Refactor)
