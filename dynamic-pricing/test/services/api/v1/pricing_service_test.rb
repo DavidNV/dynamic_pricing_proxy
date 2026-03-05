@@ -176,6 +176,7 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
     upstream_response = OpenStruct.new(success?: true, body: upstream_body)
 
     stubbed_rates = ->(attributes) {
+      upstream_call_count += 1
       assert_equal 1, attributes.length
       assert_equal "Winter", attributes[0][:period]
       assert_equal "BooleanTwin", attributes[0][:room]
@@ -197,6 +198,29 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
       assert_equal 2, service.result.length
       assert_equal "15000", service.result.detect { |r| r["period"] == "Summer" }&.dig("rate")
       assert_equal "28000", service.result.detect { |r| r["period"] == "Winter" }&.dig("rate")
+    end
+  end
+
+  test "increments quota counter after a successful upstream call" do
+    RateApiClient.stub(:get_rates, successful_upstream_response) do
+      service = build_service
+      service.run
+
+      assert service.valid?
+      assert_equal 1, RateCache.quota_count
+    end
+  end
+
+  test "does not increment quota counter on a cache hit" do
+    cached_rate = { "period" => VALID_PERIOD, "hotel" => VALID_HOTEL, "room" => VALID_ROOM, "rate" => "15000" }
+    RateCache.write(period: VALID_PERIOD, hotel: VALID_HOTEL, room: VALID_ROOM, rate: cached_rate)
+
+    RateApiClient.stub(:get_rates, ->(*) { raise "upstream should not be called" }) do
+      service = build_service
+      service.run
+
+      assert service.valid?
+      assert_equal 0, RateCache.quota_count
     end
   end
 end
