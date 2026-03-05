@@ -90,7 +90,8 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
   end
 
   test "is invalid when upstream times out" do
-    RateApiClient.stub(:get_rate, ->(*) { raise Net::ReadTimeout }) do
+    timeout_error = RateApiClient::TimeoutError.new("The upstream pricing service timed out")
+    RateApiClient.stub(:get_rate, ->(*) { raise timeout_error }) do
       service = build_service
       service.run
 
