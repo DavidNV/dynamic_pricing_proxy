@@ -55,10 +55,10 @@ TBA
 ### Caching
 - [x] Environment: add Redis to docker-compose and Gemfile
 - [ ] Research: Redis + Puma threading model
-- [ ] RateCache (TBC) tests: write, fetch, TTL, quota counter (Red)
-- [ ] RateCache (TBC): implement (Green + Refactor)
-- [ ] PricingService tests: cache hit, cache miss, quota exhausted (Red)
-- [ ] PricingService: integrate RateCache (Green + Refactor)
+- [x] RateCache tests: write, fetch, TTL, quota counter (Red)
+- [x] RateCache: implement (Green + Refactor)
+- [x] PricingService tests: cache hit, cache miss, quota exhausted (Red)
+- [x] PricingService: integrate RateCache (Green + Refactor)
 
 ### Controller
 - [ ] PricingController tests: update response format

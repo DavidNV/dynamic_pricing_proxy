@@ -6,10 +6,7 @@ module Api::V1
     end
 
     def run
-      if RateCache.quota_exceeded?
-        errors << "Pricing is temporarily unavailable. Please try again later."
-        return
-      end
+      return quota_exhausted! if RateCache.quota_exceeded?
 
       _hits, misses = partition_by_cache
 
@@ -28,16 +25,8 @@ module Api::V1
 
     private
 
-    def partition_by_cache
-      @attributes.partition do |attr|
-        RateCache.fetch(period: attr[:period], hotel: attr[:hotel], room: attr[:room])
-      end
-    end
-
-    def fetch_all_cached_rates
-      @attributes.filter_map do |attr|
-        RateCache.fetch(period: attr[:period], hotel: attr[:hotel], room: attr[:room])
-      end
+    def quota_exhausted!
+      errors << "Pricing is temporarily unavailable. Please try again later."
     end
 
     def process_response(response)
@@ -49,10 +38,25 @@ module Api::V1
         return
       end
 
+      cache_rates(parsed['rates'])
       RateCache.increment_quota_counter
+    end
 
-      Array(parsed['rates']).each do |rate|
+    def cache_rates(rates)
+      Array(rates).each do |rate|
         RateCache.write(period: rate['period'], hotel: rate['hotel'], room: rate['room'], rate:)
+      end
+    end
+
+    def partition_by_cache
+      @attributes.partition do |attr|
+        RateCache.fetch(period: attr[:period], hotel: attr[:hotel], room: attr[:room])
+      end
+    end
+
+    def fetch_all_cached_rates
+      @attributes.filter_map do |attr|
+        RateCache.fetch(period: attr[:period], hotel: attr[:hotel], room: attr[:room])
       end
     end
 
