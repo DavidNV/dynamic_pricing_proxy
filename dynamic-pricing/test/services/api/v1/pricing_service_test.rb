@@ -90,7 +90,9 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
   end
 
   test "is invalid when upstream times out" do
-    timeout_error = RateApiClient::TimeoutError.new("The upstream pricing service timed out")
+    timeout_error =
+      RateApiClient::TimeoutError.new("The upstream pricing service timed out")
+
     RateApiClient.stub(:get_rate, ->(*) { raise timeout_error }) do
       service = build_service
       service.run
@@ -101,7 +103,9 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
   end
 
   test "is invalid when upstream connection is refused" do
-    connection_refused_error = Errno::ECONNREFUSED.new("Connection refused - connect(2)")
+    connection_refused_error =
+      RateApiClient::ConnectionError.new("The upstream pricing service is unavailable")
+
     RateApiClient.stub(:get_rate, ->(*) { raise connection_refused_error }) do
       service = build_service
       service.run
