@@ -42,37 +42,40 @@ class Api::V1::PricingController < ApplicationController
     end
   end
 
-  def error_status(errors)
-    message = errors.join(" ")
-    if message.include?("temporarily unavailable")
-      :service_unavailable      # 503
-    elsif message.include?("not found")
-      :not_found                # 404
-    elsif message.include?("timed out") || message.include?("unavailable") || message.include?("invalid response") || message.include?("unexpected response")
-      :bad_gateway              # 502
-    else
-      :bad_request              # 400
-    end
+  def single_pricing_params
+    params.permit(:period, :hotel, :room)
+  end
+
+  def batch_pricing_params
+    params.permit(attributes: [:period, :hotel, :room])
   end
 
   def validate_single_params
-    unless params[:period].present? && params[:hotel].present? && params[:room].present?
+    unless all_single_params_present?
       return render json: { error: "Missing required parameters: period, hotel, room" }, status: :bad_request
     end
 
-    validate_attribute({ period: params[:period], hotel: params[:hotel], room: params[:room] })
+    validate_attribute({
+      period: single_pricing_params[:period],
+      hotel: single_pricing_params[:hotel],
+      room: single_pricing_params[:room]
+    })
+  end
+
+  def all_single_params_present?
+    single_pricing_params[:period].present? && single_pricing_params[:hotel].present? && single_pricing_params[:room].present?
   end
 
   def validate_batch_params
-    unless params[:attributes].present?
+    unless batch_pricing_params[:attributes].present?
       return render json: { error: "Missing required parameter: attributes" }, status: :bad_request
     end
 
-    unless params[:attributes].is_a?(Array)
+    unless batch_pricing_params[:attributes].is_a?(Array)
       return render json: { error: "attributes must be an array" }, status: :bad_request
     end
 
-    params[:attributes].each_with_index do |attr, index|
+    batch_pricing_params[:attributes].each_with_index do |attr, index|
       return unless validate_attribute({ period: attr[:period], hotel: attr[:hotel], room: attr[:room] }, index:)
     end
   end
@@ -96,5 +99,18 @@ class Api::V1::PricingController < ApplicationController
     end
 
     true
+  end
+
+  def error_status(errors)
+    message = errors.join(" ")
+    if message.include?("temporarily unavailable")
+      :service_unavailable      # 503
+    elsif message.include?("not found")
+      :not_found                # 404
+    elsif message.include?("timed out") || message.include?("unavailable") || message.include?("invalid response") || message.include?("unexpected response")
+      :bad_gateway              # 502
+    else
+      :bad_request              # 400
+    end
   end
 end
