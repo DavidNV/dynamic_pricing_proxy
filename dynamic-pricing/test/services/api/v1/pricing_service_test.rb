@@ -38,4 +38,30 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "is invalid when upstream returns a failure response" do
+    body = { "error" => "Rate not found" }.to_json
+    failed_response = OpenStruct.new(success?: false, body:)
+
+    RateApiClient.stub(:get_rate, failed_response) do
+      service = build_service
+      service.run
+
+      refute service.valid?
+      assert_includes service.errors.join, "Rate not found"
+    end
+  end
+
+  test "is invalid when upstream returns success but rate is missing from response" do
+    body = { "rates" => [] }.to_json
+    empty_response = OpenStruct.new(success?: true, body:)
+
+    RateApiClient.stub(:get_rate, empty_response) do
+      service = build_service
+      service.run
+
+      refute service.valid?
+      assert_includes service.errors.join, "not found"
+    end
+  end
+
 end
