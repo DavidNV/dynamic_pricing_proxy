@@ -60,17 +60,7 @@ class Api::V1::PricingController < ApplicationController
       return render json: { error: "Missing required parameters: period, hotel, room" }, status: :bad_request
     end
 
-    unless VALID_PERIODS.include?(params[:period])
-      return render json: { error: "Invalid period. Must be one of: #{VALID_PERIODS.join(', ')}" }, status: :bad_request
-    end
-
-    unless VALID_HOTELS.include?(params[:hotel])
-      return render json: { error: "Invalid hotel. Must be one of: #{VALID_HOTELS.join(', ')}" }, status: :bad_request
-    end
-
-    unless VALID_ROOMS.include?(params[:room])
-      return render json: { error: "Invalid room. Must be one of: #{VALID_ROOMS.join(', ')}" }, status: :bad_request
-    end
+    validate_attribute({ period: params[:period], hotel: params[:hotel], room: params[:room] })
   end
 
   def validate_batch_params
@@ -83,17 +73,7 @@ class Api::V1::PricingController < ApplicationController
     end
 
     params[:attributes].each_with_index do |attr, index|
-      unless VALID_PERIODS.include?(attr[:period])
-        return render json: { error: "Invalid period at index #{index}. Must be one of: #{VALID_PERIODS.join(', ')}" }, status: :bad_request
-      end
-
-      unless VALID_HOTELS.include?(attr[:hotel])
-        return render json: { error: "Invalid hotel at index #{index}. Must be one of: #{VALID_HOTELS.join(', ')}" }, status: :bad_request
-      end
-
-      unless VALID_ROOMS.include?(attr[:room])
-        return render json: { error: "Invalid room at index #{index}. Must be one of: #{VALID_ROOMS.join(', ')}" }, status: :bad_request
-      end
+      return unless validate_attribute({ period: attr[:period], hotel: attr[:hotel], room: attr[:room] }, index:)
     end
   end
 
