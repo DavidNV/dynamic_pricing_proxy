@@ -6,6 +6,28 @@
 
 A Ruby on Rails service acting as a rate-limit aware proxy between consumers and a costly upstream hotel room pricing API.
 
+## How to run
+
+### How to build and run
+
+```bash
+docker compose up -d --build
+```
+
+### How to test
+
+```bash
+docker compose exec interview-dev bin/rails test
+```
+
+### AI-generated script demo
+
+I wrote a tiny script that ran 1000 times but I figured AI would do a better job and indeed it did.
+
+```bash
+docker compose exec interview-dev bundle exec ruby scripts/demo.rb
+```
+
 ## Constrains
 
 Besides the inherit cost the princig API has, we also have the following constraints/limitations.
@@ -20,8 +42,7 @@ Besides the inherit cost the princig API has, we also have the following constra
 
 1. Requests per day is treated as a fixed 24-hour window starting from the first upstream call of the day — the Redis key expires after 24 hours and resets automatically
 2. The upstream host is provided via RATE_API_URL
-3. The rate field is a string (e.g. "12000"). I didnt convert it to any number or currency.
-4. Redis availability is required.
+3. Redis availability is required.
 
 ## Implementation considerations
 
@@ -161,20 +182,6 @@ Content-Type: application/json
 - [x] PricingController: fix response shape (Green + Refactor)
 - [x] PricingController tests: upstream error scenarios handled correctly as HTTP status codes
 - [x] PricingController: implement error response mapping (Green + Refactor)
-
-## How to run
-
-### How to build and run
-
-```bash
-docker compose up -d --build
-```
-
-### How to test
-
-```bash
-docker compose exec interview-dev bin/rails test
-```
 
 ## Future work
 
