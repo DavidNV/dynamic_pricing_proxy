@@ -18,4 +18,11 @@ class RateCacheTest < ActiveSupport::TestCase
     result = RateCache.fetch(period: VALID_PERIOD, hotel: VALID_HOTEL, room: VALID_ROOM)
     assert_nil result
   end
+
+  test "returns the cached rate after a write" do
+    RateCache.write(period: VALID_PERIOD, hotel: VALID_HOTEL, room: VALID_ROOM, rate: VALID_RATE)
+    result = RateCache.fetch(period: VALID_PERIOD, hotel: VALID_HOTEL, room: VALID_ROOM)
+
+    assert_equal VALID_RATE, result
+  end
 end
