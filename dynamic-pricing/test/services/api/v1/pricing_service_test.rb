@@ -64,4 +64,16 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "is invalid when upstream returns success but rates key is missing" do
+    body = {}.to_json
+    bad_response = OpenStruct.new(success?: true, body:)
+
+    RateApiClient.stub(:get_rate, bad_response) do
+      service = build_service
+      service.run
+
+      refute service.valid?
+      assert_includes service.errors.join, "unexpected response"
+    end
+  end
 end
