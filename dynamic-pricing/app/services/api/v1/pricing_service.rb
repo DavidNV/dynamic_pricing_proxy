@@ -7,23 +7,28 @@ module Api::V1
     end
 
     def run
-      rate = RateApiClient.get_rate(period: @period, hotel: @hotel, room: @room)
-      if rate.success?
-        parsed_rate = parse_body(rate.body)
-        return unless parsed_rate
-
-        @result = find_rate(parsed_rate)
-        errors << "Rate not found for the requested period, hotel and room" unless @result
-      else
-        errors << JSON.parse(rate.body)['error']
-      end
+      response = RateApiClient.get_rate(period: @period, hotel: @hotel, room: @room)
+      process_response(response)
     rescue RateApiClient::TimeoutError
       errors << "The upstream pricing service timed out, please try again later"
     rescue RateApiClient::ConnectionError
-      errors << "The upstream pricing service is unavailable"
+      errors << "The upstream pricing service is unavailable, please try again later"
     end
 
     private
+
+    def process_response(response)
+      unless response.success?
+        errors << JSON.parse(response.body)['error']
+        return
+      end
+
+      parsed = parse_body(response.body)
+      return unless parsed
+
+      @result = find_rate(parsed)
+      errors << "Rate not found for the requested period, hotel and room" unless @result
+    end
 
     def parse_body(body)
       parsed = JSON.parse(body)
