@@ -37,19 +37,33 @@ TBA
 
 ## Development plan
 
-- [x] Init project repository.
-- [x] First README with update with constrains, assumptions, and implementation sections.
-- [ ] Research on how to scale Redis with Puma.
-- [ ] PricingService Tests: support current scenario (Non-batched requests)(Red run).
-- [ ] PricingService Tests: Add test for batched requests (Red run).
-- [ ] PricingService: Add implementation for Batched requests (Green run and Refactor).
-- [ ] Princing Endpoint Tests: add test for batched requests (Red run).
-- [ ] Princing Endpoint: add implementation for batched requests (Green run and refactor).
-- [ ] Environment: Add Redis to development env.
-- [ ] RateCacheService (TBC) Tests: add test for caching behaviour.
-- [ ] RateCacheService (TBC): implement caching behaviour for upstream quota and rates.
-- [ ] PricingService Tests: Add test scenarios for cached requests.
-- [ ] Princing Endpoint Tests: TBC: Perhaps mocks will be necessary but I consider the integration tests in PricingService would be enough
+- [x] Init project repository
+- [x] README: constraints, assumptions, implementation approach
+
+# PricingService — Core behaviour
+- [ ] PricingService tests: happy path, single room (Red)
+- [ ] PricingService: implement happy path, single room (Green + Refactor)
+- [ ] PricingService tests: upstream error handling (5xx), timeout, bad JSON, missing rate (Red)
+- [ ] PricingService: implement error handling (Green + Refactor)
+
+# RateApiClient — Catch support
+- [ ] RateApiClient: extend get_rate to support multiple rooms (get_rates)
+- [ ] PricingService tests: internal batching via get_rates (Red)
+- [ ] PricingService: implement internal batching (Green + Refactor)
+
+# Caching
+- [ ] Environment: add Redis to docker-compose and Gemfile
+- [ ] Research: Redis + Puma threading model
+- [ ] RateCache (TBC) tests: write, fetch, TTL, quota counter (Red)
+- [ ] RateCache (TBC): implement (Green + Refactor)
+- [ ] PricingService tests: cache hit, cache miss, quota exhausted (Red)
+- [ ] PricingService: integrate RateCache (Green + Refactor)
+
+# Controller
+- [ ] PricingController tests: update response format
+- [ ] PricingController: fix response shape (Green + Refactor)
+- [ ] PricingController tests: upstream error scenarios handled correctly as HTTP status codes
+- [ ] PricingController: implement error response mapping (Green + Refactor)
 
 ## How to run
 TBA
