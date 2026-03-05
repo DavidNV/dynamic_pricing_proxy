@@ -4,6 +4,9 @@ class RateApiClient
   headers "Content-Type" => "application/json"
   headers 'token' => ENV.fetch('RATE_API_TOKEN', '04aa6f42aa03f220c2ae9a276cd68c62')
 
+  class RateApiError < StandardError; end
+  class TimeoutError < RateApiError; end
+
   def self.get_rate(period:, hotel:, room:)
     params = {
       attributes: [
@@ -15,5 +18,7 @@ class RateApiClient
       ]
     }.to_json
     self.post("/pricing", body: params)
+  rescue Net::ReadTimeout, Net::OpenTimeout
+    raise TimeoutError, "The upstream pricing service timed out"
   end
 end
