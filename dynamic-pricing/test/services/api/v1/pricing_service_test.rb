@@ -7,6 +7,8 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
 
   setup do
     REDIS.del("upstream:call_count")
+    REDIS.del("pricing:#{VALID_PERIOD}:#{VALID_HOTEL}:#{VALID_ROOM}")
+    REDIS.del("pricing:Winter:FloatingPointResort:BooleanTwin")
   end
 
   def build_service
@@ -159,5 +161,42 @@ class Api::V1::PricingServiceTest < ActiveSupport::TestCase
 
     refute service.valid?
     assert_includes service.errors.join, "Pricing is temporarily unavailable"
+  end
+
+  test "only calls upstream for cache misses in a batch request" do
+    cached_rate = { "period" => "Summer", "hotel" => "FloatingPointResort", "room" => "SingletonRoom", "rate" => "15000" }
+    RateCache.write(period: "Summer", hotel: "FloatingPointResort", room: "SingletonRoom", rate: cached_rate)
+
+    upstream_call_count = 0
+    upstream_body = {
+      "rates" => [
+        { "period" => "Winter", "hotel" => "FloatingPointResort", "room" => "BooleanTwin", "rate" => "28000" }
+      ]
+    }.to_json
+    upstream_response = OpenStruct.new(success?: true, body: upstream_body)
+
+    stubbed_rates = ->(attributes) {
+      assert_equal 1, attributes.length
+      assert_equal "Winter", attributes[0][:period]
+      assert_equal "BooleanTwin", attributes[0][:room]
+      upstream_response
+    }
+
+    RateApiClient.stub(:get_rates, stubbed_rates) do
+      service = Api::V1::PricingService.new(
+        attributes: [
+          { period: "Summer", hotel: "FloatingPointResort", room: "SingletonRoom" },
+          { period: "Winter", hotel: "FloatingPointResort", room: "BooleanTwin" }
+        ],
+        result_extractor: BatchRateExtractor.new
+      )
+      service.run
+
+      assert service.valid?
+      assert_equal 1, upstream_call_count
+      assert_equal 2, service.result.length
+      assert_equal "15000", service.result.detect { |r| r["period"] == "Summer" }&.dig("rate")
+      assert_equal "28000", service.result.detect { |r| r["period"] == "Winter" }&.dig("rate")
+    end
   end
 end
