@@ -40,18 +40,18 @@ TBA
 - [x] Init project repository
 - [x] README: constraints, assumptions, implementation approach
 
-# PricingService — Core behaviour
+### PricingService — Core behaviour
 - [ ] PricingService tests: happy path, single room (Red)
 - [ ] PricingService: implement happy path, single room (Green + Refactor)
 - [ ] PricingService tests: upstream error handling (5xx), timeout, bad JSON, missing rate (Red)
 - [ ] PricingService: implement error handling (Green + Refactor)
 
-# RateApiClient — Catch support
+### RateApiClient — Catch support
 - [ ] RateApiClient: extend get_rate to support multiple rooms (get_rates)
 - [ ] PricingService tests: internal batching via get_rates (Red)
 - [ ] PricingService: implement internal batching (Green + Refactor)
 
-# Caching
+### Caching
 - [ ] Environment: add Redis to docker-compose and Gemfile
 - [ ] Research: Redis + Puma threading model
 - [ ] RateCache (TBC) tests: write, fetch, TTL, quota counter (Red)
@@ -59,7 +59,7 @@ TBA
 - [ ] PricingService tests: cache hit, cache miss, quota exhausted (Red)
 - [ ] PricingService: integrate RateCache (Green + Refactor)
 
-# Controller
+### Controller
 - [ ] PricingController tests: update response format
 - [ ] PricingController: fix response shape (Green + Refactor)
 - [ ] PricingController tests: upstream error scenarios handled correctly as HTTP status codes
