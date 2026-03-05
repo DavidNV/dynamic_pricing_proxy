@@ -6,7 +6,7 @@ class RateApiClient
 
   class RateApiError < StandardError; end
   class TimeoutError < RateApiError; end
-  class ConnectionError < Error; end
+  class ConnectionError < RateApiError; end
 
   def self.get_rate(period:, hotel:, room:)
     params = {
