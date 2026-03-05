@@ -6,6 +6,10 @@ module Api::V1
     end
 
     def run
+      if RateCache.quota_exceeded?
+        errors << "Pricing is temporarily unavailable. Please try again later."
+        return
+      end
       response = RateApiClient.get_rates(@attributes)
       process_response(response)
     rescue RateApiClient::TimeoutError

@@ -8,17 +8,9 @@ class RateApiClient
   class TimeoutError < RateApiError; end
   class ConnectionError < RateApiError; end
 
-  def self.get_rates(period:, hotel:, room:)
-    params = {
-      attributes: [
-        {
-          period: period,
-          hotel: hotel,
-          room: room
-        }
-      ]
-    }.to_json
-    self.post("/pricing", body: params)
+  def self.get_rates(attributes)
+    body = { attributes: Array(attributes) }.to_json
+    self.post("/pricing", body:)
   rescue Net::ReadTimeout, Net::OpenTimeout
     raise TimeoutError, "The upstream pricing service timed out"
   rescue Errno::ECONNREFUSED, SocketError
