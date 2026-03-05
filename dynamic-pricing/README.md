@@ -41,10 +41,10 @@ TBA
 - [x] README: constraints, assumptions, implementation approach
 
 ### PricingService — Core behaviour
-- [ ] PricingService tests: happy path, single room (Red)
-- [ ] PricingService: implement happy path, single room (Green + Refactor)
-- [ ] PricingService tests: upstream error handling (5xx), timeout, bad JSON, missing rate (Red)
-- [ ] PricingService: implement error handling (Green + Refactor)
+- [x] PricingService tests: happy path, single room (Red)
+- [x] PricingService: implement happy path, single room (Green + Refactor)
+- [x] PricingService tests: upstream error handling (5xx), timeout, bad JSON, missing rate (Red)
+- [x] PricingService: implement error handling (Green + Refactor)
 
 ### RateApiClient — Catch support
 - [ ] RateApiClient: extend get_rate to support multiple rooms (get_rates)
