@@ -24,6 +24,8 @@ module Api::V1
       else
         errors << JSON.parse(rate.body)['error']
       end
+    rescue RateApiClient::TimeoutError
+      errors << "The upstream pricing service timed out, please try again later"
     end
   end
 end
