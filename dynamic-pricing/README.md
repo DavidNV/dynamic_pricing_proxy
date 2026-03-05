@@ -28,11 +28,14 @@ Besides the inherit cost the princig API has, we also have the following constra
 The approach I will follow is usign Redis to cache the rates since Redis is native-TTL, seems pretty logic to go this route instead of using Rails.cache. I will consider also the quota for a 24 hours window.
 
 ### Cache Key Design
+
 Each cached entry is keyed (Format TBD). TTL is set to 300 seconds (5 minutes) on write.
 The service never serves a stale entry so if the TTL has expired, Redis will have evicted it and a fresh upstream fetch is triggered.
 
 ### Quota Awareness
+
 The service tracks upstream call count in Redis with a 24-hour rolling TTL.
+
 
 ## Selected Strategy
 
@@ -40,9 +43,10 @@ The strategy I chose involved Redis and new endpoint in order to support to supp
 In the case when we receive a single room request and it is not cached there is not much we can do but perform the upstream
 request and store the value for five minutes but when the batching comes into place, say for 20 rooms of which 15 are missing, we avoid performing 15 call but retrieve 5 from cache and perform one call for the remaining 15. This also means that the cache compounds so the more user we have requesting it could, in theory at least, be less demanding for the upstream service.
 
+
 ## Implementation
 
-App Structure
+### App Structure
 
 | Class| Location | Responsibility
 | -------- | -------- |-------- |
@@ -53,7 +57,7 @@ App Structure
 | SingleRateExtractor / BatchRateExtractor  | app/extractors/ | Utilies injection: Extractors are injected and retrieve the PricingService result |
 
 
-## Design decisions
+### Design decisions
 
 - Extractors: PricingService accepts a result_extractor object that will handle the result so it is not concerned with the kind of request is using him. The controller decides which extractor to inject based on the request format which means that it removes the PricingService responsibility of providing different responses.
 
@@ -64,6 +68,7 @@ App Structure
 - Quota counter: I learnt that Redis.incr is atomic which means that no other command can interrupt it mid-execution so as far as I could check the docs, atomic operations are thread-safe which goes well with the multiple Redis instances and the connection_pool
 
 - Connection pooling: Not much to say here. I just checked online how to do it and first tiem doing it since most of the monolith I have worked on already have this set up.
+
 
 ## API Contract
 
@@ -81,6 +86,8 @@ GET /api/v1/pricing?period=Summer&hotel=FloatingPointResort&room=SingletonRoom
   "rate": "12000"
 }
 ```
+
+### Batch room lookup
 
 ```bash
 POST /api/v1/pricing
@@ -123,6 +130,7 @@ Content-Type: application/json
 | Daily quota exhausted | 503 Service Unavailable | Pricing is temporarily unavailable. Please try again later :( |
 
 
+
 ## Development plan
 
 - [x] Init project repository
@@ -142,7 +150,7 @@ Content-Type: application/json
 
 ### Caching
 - [x] Environment: add Redis to docker-compose and Gemfile
-- [ ] Research: Redis + Puma threading model
+- [x] Research: Redis + Puma threading model
 - [x] RateCache tests: write, fetch, TTL, quota counter (Red)
 - [x] RateCache: implement (Green + Refactor)
 - [x] PricingService tests: cache hit, cache miss, quota exhausted (Red)
