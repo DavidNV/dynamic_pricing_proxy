@@ -28,6 +28,13 @@ I wrote a tiny script that ran 1000 times but I figured AI would do a better job
 docker compose exec interview-dev bundle exec ruby scripts/demo.rb
 ```
 
+### Logs for PricingService
+
+```bash
+docker compose logs --tail=50 interview-dev
+```
+
+
 ## Constrains
 
 Besides the inherit cost the princig API has, we also have the following constraints/limitations.
@@ -131,6 +138,27 @@ Content-Type: application/json
 }
 ```
 
+### Check /health
+
+```bash
+curl http://localhost:3000/api/v1/health | json_pp
+```
+
+```json
+{
+   "env" : "development",
+   "quota" : {
+      "healthy" : true,
+      "limit" : 1000,
+      "remaining" : 999,
+      "used" : 1
+   },
+   "redis" : "ok",
+   "status" : "ok",
+   "version" : "7.1.5.2"
+}
+```
+
 ### Valid parameters
 
 | Parameter| Value |
@@ -182,6 +210,12 @@ Content-Type: application/json
 - [x] PricingController: fix response shape (Green + Refactor)
 - [x] PricingController tests: upstream error scenarios handled correctly as HTTP status codes
 - [x] PricingController: implement error response mapping (Green + Refactor)
+
+### Logging
+- [x] HealthCOntroller: Add controller to check request logs
+- [x] PricingController: Add around_action to log every request
+- [x] PricingService: add logging on each PricingService branch
+
 
 ## Future work
 
