@@ -5,6 +5,7 @@ class Api::V1::PricingController < ApplicationController
 
   before_action :validate_single_params, only: :index
   before_action :validate_batch_params,  only: :create
+  around_action :log_request
 
   def index
     service = Api::V1::PricingService.new(
@@ -99,6 +100,22 @@ class Api::V1::PricingController < ApplicationController
     end
 
     true
+  end
+
+  def log_request
+    start = Time.now
+    yield
+  ensure
+    duration_ms = ((Time.now - start) * 1000).round(1)
+    Rails.logger.info({
+      service:     "pricing_controller",
+      event:       "request",
+      method:      request.method,
+      path:        request.path,
+      status:      response.status,
+      duration_ms: duration_ms,
+      timestamp:   Time.now.utc.iso8601
+    }.to_json)
   end
 
   def error_status(errors)
