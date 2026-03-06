@@ -47,7 +47,8 @@ Besides the inherit cost the princig API has, we also have the following constra
 
 ## Assumptions
 
-1. Requests per day is treated as a fixed 24-hour window starting from the first upstream call of the day — the Redis key expires after 24 hours and resets automatically
+1. Requests per day is treated as a fixed 24-hour window starting from the first upstream call of the day.
+The Redis key expires after 24 hours and resets automatically (Redis handles this so no logic to expire it)
 2. The upstream host is provided via RATE_API_URL
 3. Redis availability is required.
 
